@@ -1,5 +1,13 @@
-import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import {
+  Column,
+  DataType,
+  HasMany,
+  HasOne,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { Token } from '../tokens/tokens.model';
+import { UserProfile } from '../user-profile/user-profile.model';
 
 type UserCreationAttributes = {
   email: string;
@@ -35,4 +43,10 @@ export class User extends Model<User, UserCreationAttributes> {
     onUpdate: 'CASCADE',
   })
   refreshTokens: Token[];
+
+  @HasOne(() => UserProfile, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  userProfile: UserProfile;
 }

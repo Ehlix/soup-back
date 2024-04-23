@@ -7,6 +7,11 @@ import { User } from './modules/users/user.model';
 import { AuthModule } from './modules/auth/auth.module';
 import { TokensModule } from './modules/tokens/tokens.module';
 import { Token } from './modules/tokens/tokens.model';
+import { UserProfileModule } from './modules/user-profile/user-profile.module';
+import { UserProfile } from './modules/user-profile/user-profile.model';
+import { FilesModule } from './files/files.module';
+import { ServeStaticModule } from '@nestjs/serve-static/dist';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -26,12 +31,17 @@ import { Token } from './modules/tokens/tokens.model';
         database: ConfigService.get('postgresDatabase'),
         synchronize: true,
         autoLoadModels: true,
-        models: [User, Token],
+        models: [User, Token, UserProfile],
       }),
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(__dirname, 'static'),
     }),
     UsersModule,
     AuthModule,
     TokensModule,
+    UserProfileModule,
+    FilesModule,
   ],
   controllers: [],
   providers: [],
