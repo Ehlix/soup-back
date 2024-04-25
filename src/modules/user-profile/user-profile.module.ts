@@ -4,7 +4,7 @@ import { UserProfileController } from './user-profile.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UserProfile } from './user-profile.model';
 import { User } from '../users/user.model';
-import { FilesModule } from 'src/files/files.module';
+import { FilesModule } from 'src/modules/files/files.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
@@ -13,7 +13,8 @@ import { UsersModule } from '../users/users.module';
     FilesModule,
     UsersModule,
   ],
-  providers: [UserProfileService],
   controllers: [UserProfileController],
+  providers: [UserProfileService],
+  exports: [UserProfileService],
 })
 export class UserProfileModule {}

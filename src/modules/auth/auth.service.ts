@@ -20,10 +20,11 @@ export class AuthService {
       throw new BadRequestException(errMessages.USER_ALREADY_EXISTS);
     }
     await this.usersService.createUser(dto);
-    const user = await this.usersService.getPublicUser(dto.email);
-    const tokens = await this.tokenService.addRefreshToken({ userId: user.id });
-    this.setCookie(res, tokens.refreshToken);
-    return { user: user.toJSON(), ...tokens };
+    const publicUser = await this.usersService.getPublicUser(dto.email);
+    const { accessToken, refreshToken } =
+      await this.tokenService.addRefreshToken({ userId: publicUser.id });
+    this.setCookie(res, refreshToken);
+    return { ...publicUser.toJSON(), accessToken };
   }
 
   async loginUsers(dto: LoginUserDto, res: Response): Promise<AuthResponse> {
@@ -35,14 +36,15 @@ export class AuthService {
     if (!passwordEquals) {
       throw new BadRequestException(errMessages.WRONG_PASSWORD_OR_EMAIL);
     }
-    const tokens = await this.tokenService.addRefreshToken({
-      userId: user.id,
-    });
+    const { accessToken, refreshToken } =
+      await this.tokenService.addRefreshToken({
+        userId: user.id,
+      });
     const publicUser = await this.usersService.getPublicUser(user.email);
-    this.setCookie(res, tokens.refreshToken);
+    this.setCookie(res, refreshToken);
     return {
-      user: publicUser.toJSON(),
-      ...tokens,
+      ...publicUser.toJSON(),
+      accessToken,
     };
   }
 
@@ -61,19 +63,20 @@ export class AuthService {
     return true;
   }
 
-  async refreshTokens(req: Request, res: Response) {
+  async updateRefreshToken(req: Request, res: Response) {
     const email = req.user['email'];
-    const refreshToken = req.cookies['refreshToken'];
+    const prevRefreshToken = req.cookies['refreshToken'];
     const user = await this.usersService.getUserByEmail(email);
-    const tokens = await this.tokenService.updateRefreshToken({
-      userId: user.id,
-      refreshToken: refreshToken,
-    });
-    this.setCookie(res, tokens.refreshToken);
+    const { accessToken, refreshToken } =
+      await this.tokenService.updateRefreshToken({
+        userId: user.id,
+        refreshToken: prevRefreshToken,
+      });
+    this.setCookie(res, refreshToken);
     const publicUser = await this.usersService.getPublicUser(user.email);
     return {
       user: publicUser.toJSON(),
-      ...tokens,
+      accessToken,
     };
   }
 

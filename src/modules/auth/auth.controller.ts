@@ -49,6 +49,6 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
   refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    return this.authService.refreshTokens(req, res);
+    return this.authService.updateRefreshToken(req, res);
   }
 }

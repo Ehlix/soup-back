@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { Token } from '../tokens/tokens.model';
 import { UserProfile } from '../user-profile/user-profile.model';
+import { Artwork } from '../artworks/artwork.model';
 
 type UserCreationAttributes = {
   email: string;
@@ -49,4 +50,10 @@ export class User extends Model<User, UserCreationAttributes> {
     onUpdate: 'CASCADE',
   })
   userProfile: UserProfile;
+
+  @HasMany(() => Artwork, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  artworks: Artwork[];
 }

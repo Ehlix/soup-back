@@ -24,9 +24,10 @@ export class TokensService {
     if (!user) {
       throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
-    const { accessToken, refreshToken } = await this.generateJwtTokens(
-      user.email,
-    );
+    const { accessToken, refreshToken } = await this.generateJwtTokens({
+      id: user.id,
+      email: user.email,
+    });
     await this.tokenRepository.create({
       userId: user.id,
       refreshToken: refreshToken,
@@ -54,9 +55,10 @@ export class TokensService {
       });
       throw new BadRequestException(verifyToken.message);
     }
-    const { accessToken, refreshToken } = await this.generateJwtTokens(
-      user.email,
-    );
+    const { accessToken, refreshToken } = await this.generateJwtTokens({
+      id: user.id,
+      email: user.email,
+    });
     await this.tokenRepository.update(
       { refreshToken: refreshToken },
       { where: { userId: dto.userId, refreshToken: dto.refreshToken } },
@@ -77,8 +79,8 @@ export class TokensService {
     return true;
   }
 
-  private async generateJwtTokens(user: any) {
-    const payload = { email: user };
+  private async generateJwtTokens(user: { id: string; email: string }) {
+    const payload = user;
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get('jwtAccessSecret'),

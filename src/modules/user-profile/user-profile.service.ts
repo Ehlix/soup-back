@@ -3,7 +3,7 @@ import { CreateUserProfileDto } from './dto/create-user-profile-dto';
 import { Request } from 'express';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserProfile } from './user-profile.model';
-import { FilesService } from 'src/files/files.service';
+import { FilesService } from 'src/modules/files/files.service';
 import { UsersService } from '../users/users.service';
 import { errMessages } from 'src/common/constants/errMessages';
 
@@ -37,6 +37,15 @@ export class UserProfileService {
 
   async createUserProfile(req: Request, dto: CreateUserProfileDto, image) {
     const user = await this.usersService.getUserByEmail(req.user['email']);
+    if (!user) {
+      throw new BadRequestException(errMessages.USER_NOT_FOUND);
+    }
+    const candidate = await this.userProfileRepository.findOne({
+      where: { userId: user.id },
+    });
+    if (candidate) {
+      throw new BadRequestException(errMessages.PROFILE_ALREADY_EXISTS);
+    }
     const avatar = await this.filesService.createImageFile(image, user.id);
     const userProfile = await this.userProfileRepository.create({
       ...dto,

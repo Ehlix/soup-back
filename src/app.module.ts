@@ -9,9 +9,11 @@ import { TokensModule } from './modules/tokens/tokens.module';
 import { Token } from './modules/tokens/tokens.model';
 import { UserProfileModule } from './modules/user-profile/user-profile.module';
 import { UserProfile } from './modules/user-profile/user-profile.model';
-import { FilesModule } from './files/files.module';
+import { FilesModule } from './modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static/dist';
+import { ArtworksModule } from './modules/artworks/artworks.module';
 import * as path from 'path';
+import { Artwork } from './modules/artworks/artwork.model';
 
 @Module({
   imports: [
@@ -31,7 +33,7 @@ import * as path from 'path';
         database: ConfigService.get('postgresDatabase'),
         synchronize: true,
         autoLoadModels: true,
-        models: [User, Token, UserProfile],
+        models: [User, Token, UserProfile, Artwork],
       }),
     }),
     ServeStaticModule.forRoot({
@@ -42,6 +44,7 @@ import * as path from 'path';
     TokensModule,
     UserProfileModule,
     FilesModule,
+    ArtworksModule,
   ],
   controllers: [],
   providers: [],

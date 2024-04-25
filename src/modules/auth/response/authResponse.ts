@@ -1,7 +1,10 @@
-import { User } from 'src/modules/users/user.model';
+import { UserProfile } from 'src/modules/user-profile/user-profile.model';
 
 export class AuthResponse {
-  user: User;
+  id: string;
+  email: string;
+  createdAt?: string;
+  updatedAt?: string;
+  userProfile: UserProfile | null;
   accessToken: string;
-  refreshToken: string;
 }

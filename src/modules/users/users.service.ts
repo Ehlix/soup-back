@@ -5,6 +5,13 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user-dto';
 import { errMessages } from '../../common/constants/errMessages';
 import { UpdateUserDto } from './dto/update-user-dto';
+import { UserProfile } from '../user-profile/user-profile.model';
+
+type UserWithProfile = User & {
+  userProfile: UserProfile | null;
+};
+
+type PublicUser = Omit<UserWithProfile, 'password'>;
 
 @Injectable()
 export class UsersService {
@@ -21,46 +28,51 @@ export class UsersService {
     return this.userRepository.create({ ...dto, password });
   }
 
-  async getUsers() {
-    return this.userRepository.findAll();
-  }
-
-  async getUserByEmail(email: string): Promise<User> {
-    return this.userRepository.findOne({
-      where: { email },
+  async getUsers(): Promise<UserWithProfile[]> {
+    return this.userRepository.findAll({
+      attributes: { exclude: ['password'] },
+      include: [{ model: UserProfile, required: false }],
     });
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserByEmail(email: string): Promise<UserWithProfile> {
+    return this.userRepository.findOne({
+      where: { email },
+      include: [{ model: UserProfile, required: false }],
+    });
+  }
+
+  async getUserById(id: string): Promise<UserWithProfile> {
     return this.userRepository.findOne({
       where: { id },
+      include: [{ model: UserProfile, required: false }],
     });
   }
 
-  async getPublicUser(email: string) {
-    const user = await this.userRepository.findOne({
+  async getPublicUser(email: string): Promise<PublicUser> {
+    return await this.userRepository.findOne({
       where: { email },
-      attributes: { exclude: ['password', 'refreshTokens'] },
+      attributes: { exclude: ['password'] },
+      include: [{ model: UserProfile, required: false }],
     });
-    return user;
   }
 
   async updateUser(email: string, dto: UpdateUserDto) {
-    const userByDtoEmail = await this.getUserByEmail(dto.email);
-    if (!userByDtoEmail) {
-      await this.userRepository.update(dto, { where: { email } });
-      return this.getPublicUser(dto.email);
+    const candidate = await this.getUserByEmail(dto.email);
+    if (candidate) {
+      throw new BadRequestException(errMessages.EMAIL_ALREADY_EXISTS);
     }
-    throw new BadRequestException(errMessages.USER_ALREADY_EXISTS);
+    await this.userRepository.update(dto, { where: { email } });
+    return this.getPublicUser(dto.email);
   }
 
   async deleteUser(email: string) {
     const user = await this.getUserByEmail(email);
-    if (user) {
-      await this.userRepository.destroy({ where: { id: user.id } });
-      return true;
+    if (!user) {
+      throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
-    throw new BadRequestException(errMessages.USER_NOT_FOUND);
+    await this.userRepository.destroy({ where: { id: user.id } });
+    return true;
   }
 
   private async hashPassword(password: string) {
