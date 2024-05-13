@@ -2,18 +2,21 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Patch,
   Post,
   Query,
   Req,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ArtworksService } from './artworks.service';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { Request } from 'express';
 import { CreateArtworksDto } from './dto/create-artworks-dto';
 import { GetUserArtworksDto } from './dto/get-user-artworks-dto';
@@ -41,12 +44,12 @@ const uploadImagesInterceptor = [
 export class ArtworksController {
   constructor(private readonly artworksService: ArtworksService) {}
 
-  @Get('all')
+  @Post('all')
   getAllArtworks(@Body() dto: GetAllArtworksDto): Promise<ArtworksResponse[]> {
     return this.artworksService.getAllArtworks(dto);
   }
 
-  @Get('user-artworks')
+  @Post('user-artworks')
   getUserArtworks(
     @Body() dto: GetUserArtworksDto,
   ): Promise<ArtworksResponse[]> {
@@ -62,6 +65,16 @@ export class ArtworksController {
     data: InterceptorData,
   ): Promise<{ thumbnail: string; files: string[] }> {
     return this.artworksService.uploadImages(req, data);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(
+    @Req() req: Request,
+    @UploadedFile() data: Express.Multer.File,
+  ): Promise<{ file: string }> {
+    return this.artworksService.uploadImage(req, data);
   }
 
   @UseGuards(AccessTokenGuard)

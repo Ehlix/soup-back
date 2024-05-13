@@ -9,13 +9,15 @@ import {
 import { User } from '../users/user.model';
 
 type UserProfileCreationAttributes = {
-  avatar?: string;
   name: string;
   city: string;
   country: string;
   headline: string;
   userId: string;
   site: string;
+  avatar?: string;
+  folders?: string[];
+  description?: string;
 };
 
 @Table({ tableName: 'users-profiles' })
@@ -68,6 +70,20 @@ export class UserProfile extends Model<
     defaultValue: null,
   })
   avatar: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    defaultValue: null,
+  })
+  description: string;
+
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+    defaultValue: null,
+  })
+  folders: string[];
 
   @Column({
     type: DataType.JSON,

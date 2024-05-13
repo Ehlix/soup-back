@@ -14,7 +14,8 @@ export class FilesService {
       const filePath = path.resolve(
         __dirname,
         '../..',
-        'static/users',
+        'static',
+        'users',
         folder,
         file,
       );
@@ -40,7 +41,13 @@ export class FilesService {
         return null;
       }
       const fileName = uuid.v4() + '.jpg';
-      const filePath = path.resolve(__dirname, '../..', 'static/users', folder);
+      const filePath = path.resolve(
+        __dirname,
+        '../..',
+        'static',
+        'users',
+        folder,
+      );
       if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, { recursive: true });
       }
@@ -62,7 +69,7 @@ export class FilesService {
         return null;
       }
       const fileName = uuid.v4() + '.jpg';
-      const filePath = path.resolve(__dirname, '../..', 'static/cache');
+      const filePath = path.resolve(__dirname, '../..', 'static', 'cache');
       if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, { recursive: true });
       }
@@ -86,10 +93,22 @@ export class FilesService {
       }
       if (Array.isArray(fileName)) {
         for (const file of fileName) {
-          await this.copyFromCacheToStatic(file, folder);
+          const res = await this.copyFromCacheToStatic(file, folder);
+          if (!res) {
+            throw new HttpException(
+              errMessages.CREATE_FILE_ERROR,
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+          }
         }
       } else if (typeof fileName === 'string') {
-        await this.copyFromCacheToStatic(fileName, folder);
+        const res = await this.copyFromCacheToStatic(fileName, folder);
+        if (!res) {
+          throw new HttpException(
+            errMessages.CREATE_FILE_ERROR,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
       }
       return fileName;
     } catch (e) {
@@ -101,17 +120,24 @@ export class FilesService {
   }
 
   private async copyFromCacheToStatic(file: string, folder: string) {
-    const filePath = path.resolve(__dirname, '../..', 'static/cache', file);
+    const filePath = path.resolve(__dirname, '../..', 'static', 'cache', file);
     if (fs.existsSync(filePath)) {
-      const pathDest = path.resolve(__dirname, '../..', 'static/users', folder);
+      const pathDest = path.resolve(
+        __dirname,
+        '../..',
+        'static',
+        'users',
+        folder,
+      );
       if (!fs.existsSync(pathDest)) {
         fs.mkdirSync(pathDest, { recursive: true });
       }
       await this.copyFile(filePath, path.join(pathDest, file));
+      fs.rmSync(filePath, {
+        force: true,
+      });
+      return fs.existsSync(path.join(pathDest, file));
     }
-    fs.rmSync(filePath, {
-      force: true,
-    });
     // fs.rmSync(path.resolve(__dirname, '../..', 'static', 'cache', file));
   }
 

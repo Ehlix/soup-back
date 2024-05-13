@@ -25,17 +25,37 @@ export class UserProfileService {
     });
   }
 
-  async getUserProfileByUserId(userId: string) {
-    const user = await this.usersService.getUserById(userId);
-    if (!user) {
-      throw new BadRequestException(errMessages.USER_NOT_FOUND);
+  async getUserProfileByUserIdOrSite(userId?: string, site?: string) {
+    if (!userId && !site) {
+      throw new BadRequestException(
+        errMessages.MISSING_PARAMETERS + ' userId or site',
+      );
     }
-    return this.userProfileRepository.findOne({
-      where: { userId: user.id },
-    });
+    try {
+      if (userId) {
+        const userProfile = await this.userProfileRepository.findOne({
+          where: { userId: userId },
+        });
+        if (!userProfile) {
+          throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
+        }
+        return userProfile;
+      }
+      if (site) {
+        const userProfile = await this.userProfileRepository.findOne({
+          where: { site: site },
+        });
+        if (!userProfile) {
+          throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
+        }
+        return userProfile;
+      }
+    } catch (error) {
+      throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
+    }
   }
 
-  async createUserProfile(req: Request, dto: CreateUserProfileDto, image) {
+  async createUserProfile(req: Request, dto: CreateUserProfileDto) {
     const user = await this.usersService.getUserByEmail(req.user['email']);
     if (!user) {
       throw new BadRequestException(errMessages.USER_NOT_FOUND);
@@ -46,7 +66,10 @@ export class UserProfileService {
     if (candidate) {
       throw new BadRequestException(errMessages.PROFILE_ALREADY_EXISTS);
     }
-    const avatar = await this.filesService.createImageFile(image, user.id);
+    const avatar = await this.filesService.fromCacheToStatic(
+      dto.avatar,
+      user.id,
+    );
     const userProfile = await this.userProfileRepository.create({
       ...dto,
       avatar,
@@ -56,11 +79,7 @@ export class UserProfileService {
     return userProfile;
   }
 
-  async updateUserProfile(
-    req: Request,
-    dto: Partial<CreateUserProfileDto>,
-    image,
-  ) {
+  async updateUserProfile(req: Request, dto: Partial<CreateUserProfileDto>) {
     const user = await this.usersService.getUserByEmail(req.user['email']);
     const userProfile = await this.userProfileRepository.findOne({
       where: { userId: user.id },
@@ -68,18 +87,22 @@ export class UserProfileService {
     if (!userProfile) {
       throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
     }
-    if (image) {
+    if (dto.avatar) {
       await this.filesService.deleteFile(userProfile.avatar, user.id);
-      const avatar = await this.filesService.createImageFile(image, user.id);
-      return await this.userProfileRepository.update(
+      const avatar = await this.filesService.fromCacheToStatic(
+        dto.avatar,
+        user.id,
+      );
+      await this.userProfileRepository.update(
         { ...dto, avatar },
         { where: { userId: user.id } },
       );
     } else {
-      return await this.userProfileRepository.update(
+      await this.userProfileRepository.update(
         { ...dto },
         { where: { userId: user.id } },
       );
     }
+    return this.getUserProfileByUserIdOrSite(user.id);
   }
 }

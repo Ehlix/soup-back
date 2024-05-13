@@ -12,8 +12,10 @@ import { UserProfile } from './modules/user-profile/user-profile.model';
 import { FilesModule } from './modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static/dist';
 import { ArtworksModule } from './modules/artworks/artworks.module';
-import * as path from 'path';
+import { join } from 'path';
 import { Artwork } from './modules/artworks/artwork.model';
+import { UserFollowsModule } from './modules/user-follows/user-follows.module';
+import { UserFollow } from './modules/user-follows/user-follow.model';
 
 @Module({
   imports: [
@@ -33,11 +35,11 @@ import { Artwork } from './modules/artworks/artwork.model';
         database: ConfigService.get('postgresDatabase'),
         synchronize: true,
         autoLoadModels: true,
-        models: [User, Token, UserProfile, Artwork],
+        models: [User, Token, UserProfile, Artwork, UserFollow],
       }),
     }),
     ServeStaticModule.forRoot({
-      rootPath: path.resolve(__dirname, 'static'),
+      rootPath: join(__dirname, 'static'),
     }),
     UsersModule,
     AuthModule,
@@ -45,6 +47,7 @@ import { Artwork } from './modules/artworks/artwork.model';
     UserProfileModule,
     FilesModule,
     ArtworksModule,
+    UserFollowsModule,
   ],
   controllers: [],
   providers: [],

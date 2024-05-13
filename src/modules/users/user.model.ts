@@ -9,6 +9,7 @@ import {
 import { Token } from '../tokens/tokens.model';
 import { UserProfile } from '../user-profile/user-profile.model';
 import { Artwork } from '../artworks/artwork.model';
+import { UserFollow } from '../user-follows/user-follow.model';
 
 type UserCreationAttributes = {
   email: string;
@@ -56,4 +57,10 @@ export class User extends Model<User, UserCreationAttributes> {
     onUpdate: 'CASCADE',
   })
   artworks: Artwork[];
+
+  @HasMany(() => UserFollow, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  userFollows: UserFollow[];
 }

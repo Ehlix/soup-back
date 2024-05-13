@@ -43,10 +43,14 @@ export class UsersService {
   }
 
   async getUserById(id: string): Promise<UserWithProfile> {
-    return this.userRepository.findOne({
-      where: { id },
-      include: [{ model: UserProfile, required: false }],
-    });
+    try {
+      return await this.userRepository.findOne({
+        where: { id },
+        include: [{ model: UserProfile, required: false }],
+      });
+    } catch (e) {
+      throw new BadRequestException(errMessages.USER_NOT_FOUND);
+    }
   }
 
   async getPublicUser(email: string): Promise<PublicUser> {

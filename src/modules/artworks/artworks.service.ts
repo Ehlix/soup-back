@@ -42,6 +42,14 @@ export class ArtworksService {
     return { thumbnail, files };
   }
 
+  async uploadImage(
+    req: Request,
+    data: Express.Multer.File,
+  ): Promise<{ file: string }> {
+    const file = await this.filesService.createImageFileInCache(data);
+    return { file };
+  }
+
   async createArtwork(req: Request, dto: CreateArtworksDto) {
     const user = await this.usersService.getUserByEmail(req.user['email']);
     if (!user) {
@@ -105,12 +113,13 @@ export class ArtworksService {
 
   async getUserArtworks(userId: string) {
     const userProfile =
-      await this.userProfileService.getUserProfileByUserId(userId);
+      await this.userProfileService.getUserProfileByUserIdOrSite(userId);
     if (!userProfile) {
       throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
     const artworks = await this.artworksRepository.findAll({
       where: { userId },
+      order: [['updatedAt', 'DESC']],
       include: [
         {
           model: User,

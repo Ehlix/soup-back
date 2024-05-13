@@ -63,7 +63,7 @@ export class AuthService {
     return true;
   }
 
-  async updateRefreshToken(req: Request, res: Response) {
+  async updateRefreshToken(req: Request, res: Response): Promise<AuthResponse> {
     const email = req.user['email'];
     const prevRefreshToken = req.cookies['refreshToken'];
     const user = await this.usersService.getUserByEmail(email);
@@ -75,7 +75,7 @@ export class AuthService {
     this.setCookie(res, refreshToken);
     const publicUser = await this.usersService.getPublicUser(user.email);
     return {
-      user: publicUser.toJSON(),
+      ...publicUser.toJSON(),
       accessToken,
     };
   }
