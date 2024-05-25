@@ -132,24 +132,30 @@ export class ArtworksService {
     return artworks;
   }
 
-  async getArtwork(id: string) {
-    const artworks = await this.artworksRepository.findOne({
-      where: { id },
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id'],
-          include: [{ model: UserProfile, as: 'userProfile', required: false }],
-        },
-      ],
-    });
-    return artworks;
+  async getArtworkById(id: string) {
+    try {
+      const artworks = await this.artworksRepository.findOne({
+        where: { id },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id'],
+            include: [
+              { model: UserProfile, as: 'userProfile', required: false },
+            ],
+          },
+        ],
+      });
+      return artworks;
+    } catch (e) {
+      throw new BadRequestException(errMessages.ARTWORK_NOT_FOUND);
+    }
   }
 
-  async getUserArtwork(userId: string, id: string) {
+  async getUserArtwork(userId: string, artworkId: string) {
     const artworks = await this.artworksRepository.findOne({
-      where: { id, userId },
+      where: { id: artworkId, userId },
       include: [
         {
           model: User,

@@ -17,5 +17,6 @@ import { UserProfileModule } from '../user-profile/user-profile.module';
   ],
   controllers: [ArtworksController],
   providers: [ArtworksService],
+  exports: [ArtworksService],
 })
 export class ArtworksModule {}

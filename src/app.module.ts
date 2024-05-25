@@ -16,6 +16,8 @@ import { join } from 'path';
 import { Artwork } from './modules/artworks/artwork.model';
 import { UserFollowsModule } from './modules/user-follows/user-follows.module';
 import { UserFollow } from './modules/user-follows/user-follow.model';
+import { ArtworkLikesModule } from './modules/artwork-likes/artwork-likes.module';
+import { ArtworkLike } from './modules/artwork-likes/artwork-like.model';
 
 @Module({
   imports: [
@@ -35,7 +37,7 @@ import { UserFollow } from './modules/user-follows/user-follow.model';
         database: ConfigService.get('postgresDatabase'),
         synchronize: true,
         autoLoadModels: true,
-        models: [User, Token, UserProfile, Artwork, UserFollow],
+        models: [User, Token, UserProfile, Artwork, UserFollow, ArtworkLike],
       }),
     }),
     ServeStaticModule.forRoot({
@@ -48,6 +50,7 @@ import { UserFollow } from './modules/user-follows/user-follow.model';
     FilesModule,
     ArtworksModule,
     UserFollowsModule,
+    ArtworkLikesModule,
   ],
   controllers: [],
   providers: [],

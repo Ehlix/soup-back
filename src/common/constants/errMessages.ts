@@ -1,10 +1,13 @@
 export const errMessages = {
+  ARTWORK_NOT_FOUND: 'Artwork not found',
   CREATE_FILE_ERROR: 'Create file error',
   EXPIRED_TOKEN: 'Expired token',
   EMAIL_ALREADY_EXISTS: 'Email already exists',
   INVALID_CREDENTIALS: 'Invalid credentials',
   INVALID_REFRESH_TOKEN: 'Invalid refresh token',
   INVALID_TOKEN: 'Invalid token',
+  LIKE_ALREADY_EXISTS: 'Like already exists',
+  LIKE_NOT_FOUND: 'Like not found',
   FOLLOW_ALREADY_EXISTS: 'Follow already exists',
   FOLLOW_NOT_FOUND: 'Follow not found',
   MISSING_PARAMETERS: 'Missing parameters',

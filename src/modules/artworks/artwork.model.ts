@@ -3,10 +3,12 @@ import {
   Column,
   DataType,
   ForeignKey,
+  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { User } from '../users/user.model';
+import { ArtworkLike } from '../artwork-likes/artwork-like.model';
 
 type ArtworksCreationAttributes = {
   title: string;
@@ -81,6 +83,12 @@ export class Artwork extends Model<Artwork, ArtworksCreationAttributes> {
     allowNull: false,
   })
   userId: string;
+
+  @HasMany(() => ArtworkLike, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  likes: ArtworkLike[];
 
   @BelongsTo(() => User)
   user: User;
