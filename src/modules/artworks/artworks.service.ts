@@ -16,6 +16,7 @@ import { UserProfileService } from '../user-profile/user-profile.service';
 import { UserProfile } from '../user-profile/user-profile.model';
 import { User } from '../users/user.model';
 import { updateArtworkDto } from './dto/update-artwork-dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ArtworksService {
@@ -93,9 +94,30 @@ export class ArtworksService {
   }
 
   async getAllArtworks(dto: GetAllArtworksDto) {
+    const date = dto.dateStart ? new Date(dto.dateStart) : new Date();
+    if (dto.userId) {
+      const profile =
+        await this.userProfileService.getUserProfileByUserIdOrSite({
+          userId: dto.userId,
+        });
+      if (!profile) {
+        throw new BadRequestException(errMessages.USER_NOT_FOUND);
+      }
+    }
     if (!dto.order || dto.order === 'newest') {
-      return await this.artworksRepository.findAll({
-        where: dto.userId ? { userId: dto.userId } : {},
+      const artworks = await this.artworksRepository.findAll({
+        where: {
+          createdAt: { [Op.lte]: date },
+          userId: dto.userId || { [Op.ne]: null },
+          medium: dto.medium
+            ? { [Op.contains]: [dto.medium] }
+            : { [Op.ne]: null },
+          subjects: dto.subject
+            ? { [Op.contains]: [dto.subject] }
+            : { [Op.ne]: null },
+        },
+        offset: dto.offset || 0,
+        limit: dto.limit,
         order: [['updatedAt', 'DESC']],
         include: [
           {
@@ -108,28 +130,37 @@ export class ArtworksService {
           },
         ],
       });
+      return artworks;
     }
   }
 
-  async getUserArtworks(userId: string) {
-    const userProfile =
-      await this.userProfileService.getUserProfileByUserIdOrSite(userId);
-    if (!userProfile) {
-      throw new BadRequestException(errMessages.USER_NOT_FOUND);
-    }
-    const artworks = await this.artworksRepository.findAll({
-      where: { userId },
-      order: [['updatedAt', 'DESC']],
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id'],
-          include: [{ model: UserProfile, as: 'userProfile', required: false }],
-        },
-      ],
-    });
-    return artworks;
+  async getUserArtworks(dto: GetAllArtworksDto) {
+    return this.getAllArtworks(dto);
+    // const userId = dto.userId;
+    // const userProfile =
+    //   await this.userProfileService.getUserProfileByUserIdOrSite(userId);
+    // if (!userProfile) {
+    //   throw new BadRequestException(errMessages.USER_NOT_FOUND);
+    // }
+    // const artworks = await this.artworksRepository.findAll({
+    //   where: {
+    //     userId,
+    //     medium: { [Op.contains]: [dto.medium] },
+    //     subjects: {
+    //       [Op.contains]: [dto.subject],
+    //     },
+    //   },
+    //   order: [['updatedAt', 'DESC']],
+    //   include: [
+    //     {
+    //       model: User,
+    //       as: 'user',
+    //       attributes: ['id'],
+    //       include: [{ model: UserProfile, as: 'userProfile', required: false }],
+    //     },
+    //   ],
+    // });
+    // return artworks;
   }
 
   async getArtworkById(id: string) {

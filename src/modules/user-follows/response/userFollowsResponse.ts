@@ -5,7 +5,9 @@ export class UserFollowsResponse extends UserFollow {
   constructor(userFollow: UserFollow, userProfile: UserProfile) {
     super();
     Object.assign(this, userFollow);
-    Object.assign(this.user, { id: userProfile.userId });
-    Object.assign(this.user.userProfile, userProfile);
+    Object.assign(this.follow, { id: userProfile.userId });
+    Object.assign(this.follow.userProfile, userProfile);
+    Object.assign(this.follower, { id: userProfile.userId });
+    Object.assign(this.follower.userProfile, userProfile);
   }
 }

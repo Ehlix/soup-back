@@ -5,6 +5,10 @@ import { ArtworksService } from '../artworks/artworks.service';
 import { errMessages } from 'src/common/constants/errMessages';
 import { UsersService } from '../users/users.service';
 import { Artwork } from '../artworks/artwork.model';
+import { User } from '../users/user.model';
+import { UserProfile } from '../user-profile/user-profile.model';
+import { GetArtworksLikeDto } from './dto/get-artworks-like-dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ArtworkLikesService {
@@ -78,14 +82,28 @@ export class ArtworkLikesService {
     }
   }
 
-  async getUserArtworkLikes(userId: string) {
+  async getUserArtworkLikes(dto: GetArtworksLikeDto) {
+    const date = dto.dateStart ? new Date(dto.dateStart) : new Date();
     try {
       const artworks = await this.artworkLikeRepository.findAll({
-        where: { userId },
+        where: { userId: dto.userId, createdAt: { [Op.lte]: date } },
+        offset: dto.offset || 0,
+        limit: dto.limit,
+        order: [['createdAt', 'DESC']],
         include: [
           {
             model: Artwork,
             as: 'artwork',
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id'],
+                include: [
+                  { model: UserProfile, as: 'userProfile', required: false },
+                ],
+              },
+            ],
           },
         ],
       });

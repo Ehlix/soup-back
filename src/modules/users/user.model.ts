@@ -61,6 +61,14 @@ export class User extends Model<User, UserCreationAttributes> {
   @HasMany(() => UserFollow, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    foreignKey: 'userId',
   })
   userFollows: UserFollow[];
+
+  @HasMany(() => UserFollow, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    foreignKey: 'followId',
+  })
+  userFollowers: UserFollow[];
 }

@@ -8,6 +8,8 @@ import { UserProfileService } from '../user-profile/user-profile.service';
 import { User } from '../users/user.model';
 import { UserProfile } from '../user-profile/user-profile.model';
 import { UserFollowsResponse } from './response/userFollowsResponse';
+import { GetUserFollowsDto } from './dto/get-user-follows-dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class UserFollowsService {
@@ -64,47 +66,69 @@ export class UserFollowsService {
 
   async getFollowsOrFollowersByUserId(
     mode: 'follows' | 'followers',
-    userId?: string,
-    site?: string,
+    dto: GetUserFollowsDto,
   ): Promise<UserFollowsResponse[]> {
-    if (!userId && !site) {
+    if (!dto.userId && !dto.site) {
       throw new BadRequestException(
         errMessages.MISSING_PARAMETERS + ' userId or site',
       );
     }
     const userProfile =
-      await this.userProfileService.getUserProfileByUserIdOrSite(userId, site);
+      await this.userProfileService.getUserProfileByUserIdOrSite({
+        userId: dto.userId,
+        site: dto.site,
+      });
     if (!userProfile) {
       throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
-    if (mode === 'follows') {
-      return await this.userFollowRepository.findAll({
-        where: { userId: userProfile.userId },
-        include: [
-          {
-            model: User,
-            as: 'user',
-            attributes: ['id'],
+    const date = dto.dateStart ? new Date(dto.dateStart) : new Date();
+    try {
+      switch (mode) {
+        case 'follows':
+          return await this.userFollowRepository.findAll({
+            where: {
+              userId: userProfile.userId,
+              createdAt: { [Op.lte]: date },
+            },
+            offset: dto.offset || 0,
+            limit: dto.limit,
+            order: [['createdAt', 'DESC']],
             include: [
-              { model: UserProfile, as: 'userProfile', required: false },
+              {
+                model: User,
+                as: 'follower',
+                // foreignKey: 'follow',
+                attributes: ['id'],
+                include: [
+                  { model: UserProfile, as: 'userProfile', required: false },
+                ],
+              },
             ],
-          },
-        ],
-      });
-    } else {
-      return await this.userFollowRepository.findAll({
-        where: { followId: userProfile.userId },
-        include: [
-          {
-            model: User,
-            as: 'user',
-            attributes: ['id'],
+          });
+        case 'followers':
+          return await this.userFollowRepository.findAll({
+            where: {
+              followId: userProfile.userId,
+              createdAt: { [Op.lte]: date },
+            },
+            offset: dto.offset || 0,
+            limit: dto.limit,
+            order: [['createdAt', 'DESC']],
             include: [
-              { model: UserProfile, as: 'userProfile', required: false },
+              {
+                model: User,
+                as: 'follow',
+                // foreignKey: 'follower',
+                attributes: ['id'],
+                include: [
+                  { model: UserProfile, as: 'userProfile', required: false },
+                ],
+              },
             ],
-          },
-        ],
-      });
+          });
+      }
+    } catch (e) {
+      throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
   }
 }

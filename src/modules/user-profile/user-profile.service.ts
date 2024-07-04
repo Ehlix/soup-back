@@ -6,6 +6,8 @@ import { UserProfile } from './user-profile.model';
 import { FilesService } from 'src/modules/files/files.service';
 import { UsersService } from '../users/users.service';
 import { errMessages } from 'src/common/constants/errMessages';
+import { GetUserProfileDto } from './dto/get-user-profile-dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class UserProfileService {
@@ -16,41 +18,64 @@ export class UserProfileService {
   ) {}
 
   async getUserProfileByEmail(email: string) {
-    const user = await this.usersService.getUserByEmail(email);
-    if (!user) {
+    try {
+      const user = await this.usersService.getUserByEmail(email);
+      if (!user) {
+        throw new BadRequestException(errMessages.USER_NOT_FOUND);
+      }
+      return this.userProfileRepository.findOne({
+        where: { userId: user.id },
+      });
+    } catch (e) {
       throw new BadRequestException(errMessages.USER_NOT_FOUND);
     }
-    return this.userProfileRepository.findOne({
-      where: { userId: user.id },
-    });
   }
 
-  async getUserProfileByUserIdOrSite(userId?: string, site?: string) {
-    if (!userId && !site) {
+  async getUserProfileByUserIdOrSite(data: { userId?: string; site?: string }) {
+    if (!data.userId && !data.site) {
       throw new BadRequestException(
         errMessages.MISSING_PARAMETERS + ' userId or site',
       );
     }
     try {
-      if (userId) {
+      if (data.userId) {
         const userProfile = await this.userProfileRepository.findOne({
-          where: { userId: userId },
+          where: { userId: data.userId },
         });
         if (!userProfile) {
           throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
         }
         return userProfile;
       }
-      if (site) {
+      if (data.site) {
         const userProfile = await this.userProfileRepository.findOne({
-          where: { site: site },
+          where: { site: data.site },
         });
         if (!userProfile) {
           throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
         }
         return userProfile;
       }
-    } catch (error) {
+    } catch (e) {
+      throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
+    }
+  }
+
+  async getUserProfileByNameOrSite(dto: GetUserProfileDto) {
+    try {
+      const userProfile = await this.userProfileRepository.findAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.startsWith]: dto.username } },
+            { site: { [Op.startsWith]: dto.username } },
+          ],
+        },
+      });
+      if (!userProfile) {
+        throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
+      }
+      return userProfile;
+    } catch (e) {
       throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
     }
   }
@@ -80,29 +105,33 @@ export class UserProfileService {
   }
 
   async updateUserProfile(req: Request, dto: Partial<CreateUserProfileDto>) {
-    const user = await this.usersService.getUserByEmail(req.user['email']);
-    const userProfile = await this.userProfileRepository.findOne({
-      where: { userId: user.id },
-    });
-    if (!userProfile) {
-      throw new BadRequestException(errMessages.PROFILE_NOT_FOUND);
-    }
+    const userId = req.user['id'];
+    const user = await this.usersService.getUserById(userId);
+    const userProfile = await this.getUserProfileByUserIdOrSite({ userId });
     if (dto.avatar) {
       await this.filesService.deleteFile(userProfile.avatar, user.id);
       const avatar = await this.filesService.fromCacheToStatic(
         dto.avatar,
         user.id,
       );
-      await this.userProfileRepository.update(
-        { ...dto, avatar },
-        { where: { userId: user.id } },
-      );
+      try {
+        await this.userProfileRepository.update(
+          { ...dto, avatar },
+          { where: { userId: user.id } },
+        );
+      } catch (e) {
+        throw new BadRequestException(errMessages.UPDATE_PROFILE_FAILED);
+      }
     } else {
-      await this.userProfileRepository.update(
-        { ...dto },
-        { where: { userId: user.id } },
-      );
+      try {
+        await this.userProfileRepository.update(
+          { ...dto },
+          { where: { userId: user.id } },
+        );
+      } catch (e) {
+        throw new BadRequestException(errMessages.UPDATE_PROFILE_FAILED);
+      }
     }
-    return this.getUserProfileByUserIdOrSite(user.id);
+    return this.getUserProfileByUserIdOrSite({ userId: user.id });
   }
 }

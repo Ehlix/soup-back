@@ -64,9 +64,9 @@ export class AuthService {
   }
 
   async updateRefreshToken(req: Request, res: Response): Promise<AuthResponse> {
-    const email = req.user['email'];
+    const userId = req.user['id'];
     const prevRefreshToken = req.cookies['refreshToken'];
-    const user = await this.usersService.getUserByEmail(email);
+    const user = await this.usersService.getUserById(userId);
     const { accessToken, refreshToken } =
       await this.tokenService.updateRefreshToken({
         userId: user.id,

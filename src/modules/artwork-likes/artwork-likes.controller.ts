@@ -1,7 +1,16 @@
-import { Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ArtworkLikesService } from './artwork-likes.service';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { Request } from 'express';
+import { GetArtworksLikeDto } from './dto/get-artworks-like-dto';
 
 @Controller('artwork-likes')
 export class ArtworkLikesController {
@@ -12,9 +21,9 @@ export class ArtworkLikesController {
     return this.artworkLikesService.getArtworkLikes(artworkId);
   }
 
-  @Get('user')
-  getUserArtworkLikes(@Query('userId') userId?: string) {
-    return this.artworkLikesService.getUserArtworkLikes(userId);
+  @Post('user')
+  getUserArtworkLikes(@Body() dto: GetArtworksLikeDto) {
+    return this.artworkLikesService.getUserArtworkLikes(dto);
   }
 
   @Get('count')
@@ -37,7 +46,7 @@ export class ArtworkLikesController {
 
   @UseGuards(AccessTokenGuard)
   @Post('like')
-  likeArtwork(@Req() req: Request, @Query('artworkId') artworkId?: string) {
+  likeArtwork(@Req() req: Request, artworkId?: string) {
     return this.artworkLikesService.likeArtwork(artworkId, req.user['id']);
   }
 

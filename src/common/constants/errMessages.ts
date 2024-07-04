@@ -18,5 +18,6 @@ export const errMessages = {
   SELF_FOLLOW: 'Self follow',
   USER_NOT_FOUND: 'User not found',
   USER_ALREADY_EXISTS: 'User already exists',
+  UPDATE_PROFILE_FAILED: 'Update profile failed',
   WRONG_PASSWORD_OR_EMAIL: 'Wrong password or email',
 };

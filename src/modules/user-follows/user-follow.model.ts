@@ -34,6 +34,9 @@ export class UserFollow extends Model<
   })
   followId: string;
 
+  @BelongsTo(() => User, 'followId')
+  follower: User;
+
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
@@ -41,6 +44,6 @@ export class UserFollow extends Model<
   })
   userId: string;
 
-  @BelongsTo(() => User)
-  user: User;
+  @BelongsTo(() => User, 'userId')
+  follow: User;
 }

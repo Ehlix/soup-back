@@ -19,7 +19,6 @@ import {
 } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { CreateArtworksDto } from './dto/create-artworks-dto';
-import { GetUserArtworksDto } from './dto/get-user-artworks-dto';
 import { GetAllArtworksDto } from './dto/get-all-artworks-dto';
 import { ArtworksResponse } from './response/artworksResponse';
 import { updateArtworkDto } from './dto/update-artwork-dto';
@@ -50,10 +49,8 @@ export class ArtworksController {
   }
 
   @Post('user-artworks')
-  getUserArtworks(
-    @Body() dto: GetUserArtworksDto,
-  ): Promise<ArtworksResponse[]> {
-    return this.artworksService.getUserArtworks(dto.userId);
+  getUserArtworks(@Body() dto: GetAllArtworksDto): Promise<ArtworksResponse[]> {
+    return this.artworksService.getAllArtworks(dto);
   }
 
   @UseGuards(AccessTokenGuard)

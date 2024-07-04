@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { UserFollowsService } from './user-follows.service';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { Request } from 'express';
+import { GetUserFollowsDto } from './dto/get-user-follows-dto';
 
 @Controller('user-follows')
 export class UserFollowsController {
@@ -19,27 +20,19 @@ export class UserFollowsController {
     return this.userFollowsService.unFollowUser(followId, req);
   }
 
-  @Get('user-follows')
-  getFollowsByUserId(
-    @Query('userId') userId?: string,
-    @Query('site') site?: string,
-  ) {
+  @Post('user-follows')
+  getFollowsByUserId(@Body() dto: GetUserFollowsDto) {
     return this.userFollowsService.getFollowsOrFollowersByUserId(
       'follows',
-      userId,
-      site,
+      dto,
     );
   }
 
-  @Get('user-followers')
-  getFollowersByUserId(
-    @Query('userId') userId?: string,
-    @Query('site') site?: string,
-  ) {
+  @Post('user-followers')
+  getFollowersByUserId(@Body() dto: GetUserFollowsDto) {
     return this.userFollowsService.getFollowsOrFollowersByUserId(
       'followers',
-      userId,
-      site,
+      dto,
     );
   }
 }
