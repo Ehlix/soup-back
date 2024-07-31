@@ -46,7 +46,7 @@ export class ArtworkLikesController {
 
   @UseGuards(AccessTokenGuard)
   @Post('like')
-  likeArtwork(@Req() req: Request, artworkId?: string) {
+  likeArtwork(@Req() req: Request, @Query('artworkId') artworkId?: string) {
     return this.artworkLikesService.likeArtwork(artworkId, req.user['id']);
   }
 
